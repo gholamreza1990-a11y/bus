@@ -36,12 +36,34 @@
             padding: 15px;
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.25);
-            width: 230px;
+            width: 250px;
         }
 
         .panel h3 {
             margin-top: 0;
             margin-bottom: 10px;
+        }
+
+        .location-button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 12px;
+            border: none;
+            border-radius: 8px;
+            background: #1976d2;
+            color: white;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        .location-button:active {
+            background: #125aa0;
+        }
+
+        #locationStatus {
+            margin-top: 10px;
+            font-size: 13px;
+            line-height: 1.7;
         }
 
         .bus-icon {
@@ -76,6 +98,7 @@
 <body>
 
 <div class="panel">
+
     <h3>🚌 سامانه اتوبوس</h3>
 
     <div>
@@ -89,6 +112,18 @@
         ایستگاه بعدی:
         <strong id="nextStation">ایستگاه ۱</strong>
     </div>
+
+    <button
+        class="location-button"
+        onclick="getMyLocation()"
+    >
+        📍 موقعیت من
+    </button>
+
+    <div id="locationStatus">
+        برای نمایش موقعیت، روی دکمه بالا بزنید.
+    </div>
+
 </div>
 
 <div id="map"></div>
@@ -260,14 +295,27 @@ setInterval(
 
 
 // -----------------------------
-// نمایش موقعیت کاربر
+// موقعیت کاربر
 // -----------------------------
 
 let userMarker = null;
 
-if ("geolocation" in navigator) {
+function getMyLocation() {
 
-    navigator.geolocation.watchPosition(
+    const status = document.getElementById("locationStatus");
+
+    if (!navigator.geolocation) {
+
+        status.innerText =
+            "❌ مرورگر شما از موقعیت مکانی پشتیبانی نمی‌کند.";
+
+        return;
+    }
+
+    status.innerText =
+        "⏳ در حال دریافت موقعیت شما...";
+
+    navigator.geolocation.getCurrentPosition(
 
         function(position) {
 
@@ -297,30 +345,51 @@ if ("geolocation" in navigator) {
 
             }
 
+            map.setView(
+                userPosition,
+                16
+            );
+
+            userMarker.openPopup();
+
+            status.innerText =
+                "✅ موقعیت شما پیدا شد.";
+
         },
 
         function(error) {
 
-            alert(
-                "برای نمایش موقعیت شما، اجازه دسترسی به موقعیت مکانی را بدهید."
-            );
+            if (error.code === 1) {
+
+                status.innerText =
+                    "❌ اجازه دسترسی به موقعیت مکانی داده نشده است.";
+
+            } else if (error.code === 2) {
+
+                status.innerText =
+                    "❌ موقعیت شما پیدا نشد. GPS گوشی را بررسی کنید.";
+
+            } else if (error.code === 3) {
+
+                status.innerText =
+                    "❌ دریافت موقعیت طول کشید. دوباره تلاش کنید.";
+
+            } else {
+
+                status.innerText =
+                    "❌ خطا در دریافت موقعیت مکانی.";
+
+            }
 
         },
 
         {
             enableHighAccuracy: true,
-            maximumAge: 5000,
-            timeout: 10000
+            maximumAge: 0,
+            timeout: 15000
         }
 
     );
-
-} else {
-
-    alert(
-        "مرورگر شما از موقعیت مکانی پشتیبانی نمی‌کند."
-    );
-
 }
 
 
@@ -340,3 +409,7 @@ map.fitBounds(
 </body>
 </html>
 ```
+
+بعد از ذخیره فایل، **باید همین فایل جدید را جایگزین فایل قبلی در GitHub کنی** تا نسخه آنلاین هم تغییر کند.
+
+بعد با گوشی سایت را باز کن و روی **📍 موقعیت من** بزن. این بار اگر هم کار نکرد، به‌جای اینکه فقط بگوید «موقعیت پیدا نشد»، پیام مشخصی می‌دهد که بفهمیم مشکل از **اجازه، GPS یا مرورگر** است.
